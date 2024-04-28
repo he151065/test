@@ -1,0 +1,32 @@
+$ grep -Fw nx /proc/cpuinfo
+ cờ : fpu vme ... nx mmxext ...
+$ dmesg | grep -Fw NX
+ [     0,000000] Bảo vệ NX (Tắt thực thi): hoạt động
+$ grep kernel.exec-shield /etc/sysctl.conf /etc/sysctl.d/*
+
+nasm -f elf hello3.asm
+ld -m elf_i386 -o hello3 hello3.o
+./hello3
+
+objdump -d hello3 | grep "^ " | cut -d$'\t' -f 2 | tr '\n' ' ' | sed -e 's/ *$//' | sed -e 's/ \+/\\x/g' | awk '{print "\\x"$0}'
+
+/*testshellcode.c*/
+/*
+#include <stdio.h>
+char code[] = "\x31\xc0\xb0\x04\x31\xdb\x68\x68\x65\x72\x65\x68\x48\x69\x20\x74\x89\xe1\xba\x08\x00\x00\x00\xcd\x80\x31\xc0\xb0\x01\x31\xdb\xcd\x80";
+int main(int argc, char **argv)
+{
+	int (*func)();
+	func = (int (*)()) code;
+	(int)(*func)();
+}
+*/
+#include <stdio.h> 
+#include <string.h> 
+ 
+char *shellcode = "\x31\xc0\x31\xdb\x99\x50\x68\x31\x32\x33\x34\x68\x61\x62\x63\x64\x89\xe1\xb2\x08\xb0\x04\xb3\x01\xcd\x80\x31\xdb\xb0\x01\xcd\x80";
+int main(void) 
+{ 
+	(*( void(*)() ) shellcode)(); 
+}
+gcc testshellcode.c -o testshellcode 
